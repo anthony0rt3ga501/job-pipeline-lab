@@ -4,8 +4,199 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Job Pipeline Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#0b1220;--panel:#121a2b;--panel2:#182236;--line:#2a3a55;--text:#e8eef8;--muted:#9aacc4;--teal:#2dd4bf;--tealdim:rgba(45,212,191,.16)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"IBM Plex Sans",system-ui,sans-serif;background:radial-gradient(900px 500px at 0% 0%,#1a2a4a 0%,transparent 50%),var(--bg);color:var(--text);min-height:100vh}
+a{color:var(--teal)}
+nav{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:16px 24px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(11,18,32,.92);backdrop-filter:blur(8px);z-index:5}
+nav strong{margin-right:8px}
+nav button,button.chip{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:999px;padding:8px 14px;cursor:pointer;font:500 13px inherit}
+nav button.active,button.primary{background:var(--teal);color:#04221c;border-color:transparent;font-weight:700}
+.page{display:none;max-width:1200px;margin:0 auto;padding:24px}
+.page.on{display:block}
+h1{font-size:28px;letter-spacing:-.03em;margin-bottom:8px}
+.sub{color:var(--muted);margin-bottom:18px;line-height:1.5}
+.grid{display:grid;grid-template-columns:1.15fr .85fr;gap:16px}
+@media(max-width:960px){.grid{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
+.node{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;margin:8px 0;cursor:pointer}
+.node.active,.node:hover{border-color:var(--teal);box-shadow:0 0 0 3px var(--tealdim)}
+.kicker{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--teal);font-weight:600}
+.arrow{text-align:center;color:var(--teal)}
+.lane{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
+input,textarea,select{width:100%;background:#0e1624;border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 10px;font:14px inherit}
+textarea{min-height:70px;resize:vertical}
+.example{background:#0e1624;border:1px dashed var(--line);border-radius:10px;padding:12px;font-family:"IBM Plex Mono",monospace;font-size:12px;white-space:pre-wrap;line-height:1.5;margin-top:8px}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.live{display:none;margin-top:10px;padding:8px 10px;border-radius:8px;background:var(--tealdim);color:var(--teal);font-size:13px}
+.live.on{display:block}
+footer{max-width:1200px;margin:0 auto;padding:10px 24px 30px;color:var(--muted);font-size:12px}
+</style>
 </head>
 <body>
-<p>Placeholder replaced next if needed</p>
+<nav>
+  <strong>Job Pipeline Lab</strong>
+  <button class="active" data-page="walk" onclick="showPage('walk')">Walkthrough</button>
+  <button data-page="build" onclick="showPage('build')">Build yours</button>
+  <button data-page="prompts" onclick="showPage('prompts')">Prompts</button>
+  <button class="chip" onclick="playDemo()">Play with voice</button>
+  <button class="chip" onclick="stopDemo()">Stop</button>
+  <button class="chip" id="voiceBtn" onclick="toggleVoice()">Voice: on</button>
+  <button class="chip" id="padBtn" onclick="togglePad()">Music: off</button>
+</nav>
+
+<section class="page on" id="walk">
+  <h1>See the machine, then copy it</h1>
+  <p class="sub">Click a stage. Play reads the path out loud. Friends should open this page in a browser, not inside a chat preview.</p>
+  <div class="grid">
+    <div class="card" id="flow"></div>
+    <div class="card">
+      <div class="live" id="live">Speaking…</div>
+      <h2 id="d-title">Select a stage</h2>
+      <p class="sub" id="d-meta"></p>
+      <div id="d-body"></div>
+    </div>
+  </div>
+</section>
+
+<section class="page" id="build">
+  <h1>Build your pipeline</h1>
+  <p class="sub">Type your situation. The preview, sample cards, and bot prompts update instantly. Nothing is uploaded. It stays in this browser.</p>
+  <div class="grid">
+    <div class="card">
+      <label>Your name or callsign</label>
+      <input id="fName" value="Transitioning service member"/>
+      <label>Separation or start-hunt date</label>
+      <input id="fDate" value="13 October 2026"/>
+      <label>Location / ZIP / commute</label>
+      <input id="fLoc" value="ZIP 21776 — Fort Meade / Frederick / Columbia corridor"/>
+      <label>Clearance</label>
+      <input id="fClear" value="Active TS/SCI"/>
+      <label>Certs (held or in progress)</label>
+      <input id="fCerts" value="Network+ Dec 2025; Security+ expected Oct 2026"/>
+      <label>Background in one sentence</label>
+      <textarea id="fBg">5+ years Navy leadership and mission-critical infrastructure. Cisco, Windows Server, AD, VMware, Linux, cabling labs — not claiming the Navy job was a network-engineer title.</textarea>
+      <label>Target titles</label>
+      <textarea id="fTitles">Network Technician, NOC Technician, Data Center Technician, Infrastructure Technician, Cleared Help Desk, Junior Network/Systems Admin</textarea>
+      <label>Offer goal</label>
+      <input id="fGoal" value="4–6 comparable offers"/>
+      <label>Weekly application target</label>
+      <input id="fApps" value="10–15 quality applications"/>
+      <div class="row">
+        <button class="primary" onclick="renderBuild()">Update preview</button>
+        <button class="chip" onclick="copyText('outPrompts')">Copy prompts</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="kicker">Your pipeline</div>
+      <h3 id="pGoal"></h3>
+      <div class="lane">
+        <div class="node"><div class="kicker">Bot 1</div><h3>Cleared Scout</h3><p id="pLaneA"></p></div>
+        <div class="node"><div class="kicker">Bot 2</div><h3>Hidden Gem Scout</h3><p id="pLaneB"></p></div>
+      </div>
+      <div class="arrow">↓ Job Pipeline → your 15-min triage → Application Strategist</div>
+      <div class="example" id="pCard"></div>
+      <p class="sub" style="margin-top:12px">Generated prompts</p>
+      <div class="example" id="outPrompts"></div>
+    </div>
+  </div>
+</section>
+
+<section class="page" id="prompts">
+  <h1>Stand it up in Grok Bot</h1>
+  <p class="sub">Three bots. One shared thread. You approve every application.</p>
+  <div class="card">
+    <ol style="margin-left:18px;line-height:1.6">
+      <li>Create <b>Cleared Scout</b> and paste Prompt 1 plus the card-format rules.</li>
+      <li>Create <b>Hidden Gem Scout</b> and paste Prompt 2 plus the same card rules.</li>
+      <li>Create <b>Application Strategist</b> and paste Prompt 3.</li>
+      <li>Open one chat named Job Pipeline. Hunters post cards there. You triage.</li>
+      <li>Send survivors to the strategist one job at a time. Apply the same day. Ping. D3/D7 follow-up.</li>
+    </ol>
+    <p class="sub" style="margin-top:12px">Card format (both hunters)</p>
+    <div class="example">No markdown tables. One job = one card.
+HUNT / Lane / New / Top 3
+A APPLY NOW · B STRETCH · C MONITOR
+Title — Company — City
+Pay / Clearance / Certs / Exp / Distance / Link
+Why you / Lead with / Gap / Verdict / Fit 1–10</div>
+  </div>
+</section>
+<footer>Human stays in the loop. Music is an original generated loop, not a copyrighted song. Personal details stay on this device.</footer>
+<script>
+const steps={
+goal:{title:"The goal",meta:"Why the machine exists",voice:"Land a short list of comparable offers. Quality packets, not spray and pray.",html:"<p>Pick an offer-count target and a weekly application floor. Hunt does not stop at one interview.</p>"},
+cleared:{title:"Cleared Scout",meta:"Bot 1",voice:"Bot one searches clearance boards and contractor pages only.",html:"<p>ClearanceJobs, USAJobs, defense contractor career pages.</p>"},
+gem:{title:"Hidden Gem Scout",meta:"Bot 2",voice:"Bot two walks official employer career pages in your commute area.",html:"<p>Finds roles aggregators miss.</p>"},
+pipeline:{title:"Job Pipeline",meta:"One thread",voice:"Both hunters drop short cards into one pipeline. You read one feed.",html:"<p>Merge, dedupe, rank. No fourth bot yet.</p>"},
+triage:{title:"Your triage",meta:"15 minutes",voice:"You keep, hold, or kill. Poly, degree, and senior titles get filtered here.",html:"<p>Do not send every Apply label to the strategist.</p>"},
+strategist:{title:"Application Strategist",meta:"Bot 3",voice:"Paste one posting and the resume. First line is apply, improve, or skip.",html:"<p>Truthful tailoring only. Labs stay labs.</p>"},
+apply:{title:"Apply now",meta:"Same day",voice:"If the verdict is apply now, submit today and send a short ping.",html:"<p>Log apply date, D3, and D7.</p>"},
+follow:{title:"Follow-up",meta:"Close the loop",voice:"Day three follow up. Day seven final bump. Compare offers instead of grabbing the first yes.",html:"<p>Keep hunting while screens run.</p>"}
+};
+const order=["goal","cleared","gem","pipeline","triage","strategist","apply","follow"];
+let voiceOn=true,padOn=false,audioCtx=null,padNodes=[],demoStop=false;
+
+function showPage(id){
+  document.querySelectorAll(".page").forEach(p=>p.classList.toggle("on",p.id===id));
+  document.querySelectorAll("nav button[data-page]").forEach(b=>b.classList.toggle("active",b.dataset.page===id));
+}
+function drawFlow(){
+  const labels={goal:"North star",cleared:"Bot 1",gem:"Bot 2",pipeline:"Shared thread",triage:"Human gate",strategist:"Bot 3",apply:"Send",follow:"Loop"};
+  const el=document.getElementById("flow");
+  el.innerHTML=order.map(k=>`<div class="node" data-step="${k}" onclick="showStep('${k}',true)"><div class="kicker">${labels[k]}</div><h3>${steps[k].title}</h3></div>${k==="cleared"?"":""}`).join('<div class="arrow">↓</div>');
+}
+function showStep(key,withVoice){
+  const s=steps[key]; if(!s) return Promise.resolve();
+  document.getElementById("d-title").textContent=s.title;
+  document.getElementById("d-meta").textContent=s.meta;
+  document.getElementById("d-body").innerHTML=s.html;
+  document.querySelectorAll("#flow .node").forEach(n=>n.classList.toggle("active",n.dataset.step===key));
+  if(withVoice) return speak(s.voice);
+  return Promise.resolve();
+}
+function speak(text){
+  return new Promise(res=>{
+    if(!voiceOn||!window.speechSynthesis){res();return;}
+    window.speechSynthesis.cancel();
+    const live=document.getElementById("live");
+    live.classList.add("on"); live.textContent="Voice: "+text;
+    const u=new SpeechSynthesisUtterance(text); u.rate=1;
+    u.onend=()=>{live.classList.remove("on"); setTimeout(res,400);};
+    window.speechSynthesis.speak(u);
+  });
+}
+function toggleVoice(){voiceOn=!voiceOn;document.getElementById("voiceBtn").textContent="Voice: "+(voiceOn?"on":"off");if(!voiceOn&&window.speechSynthesis)window.speechSynthesis.cancel();}
+function togglePad(){padOn=!padOn;document.getElementById("padBtn").textContent="Music: "+(padOn?"on":"off");if(padOn)startPad();else stopPad();}
+function startPad(){
+  if(audioCtx) return;
+  audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  const master=audioCtx.createGain(); master.gain.value=0.12; master.connect(audioCtx.destination);
+  const filter=audioCtx.createBiquadFilter(); filter.type="lowpass"; filter.frequency.value=2200; filter.connect(master);
+  const beat=60/104; const chords=[[261.63,329.63,392],[220,261.63,329.63],[174.61,220,261.63],[196,246.94,293.66]];
+  const bass=[130.81,110,87.31,98];
+  function tone(f,type,when,dur,g){const o=audioCtx.createOscillator(),gn=audioCtx.createGain();o.type=type;o.frequency.value=f;gn.gain.setValueAtTime(0.0001,when);gn.gain.exponentialRampToValueAtTime(g,when+0.03);gn.gain.exponentialRampToValueAtTime(0.0001,when+dur);o.connect(gn);gn.connect(filter);o.start(when);o.stop(when+dur+0.02);}
+  function loop(t0){if(!audioCtx)return;for(let c=0;c<4;c++){const s=t0+c*4*beat;chords[c].forEach((f,i)=>tone(f,"triangle",s,3.4*beat,0.04-i*0.008));tone(bass[c],"sine",s,1.8*beat,0.07);}const id=setTimeout(()=>loop(audioCtx.currentTime+0.02),16*beat*1000);padNodes.push({stop(){clearTimeout(id)}});}
+  loop(audioCtx.currentTime+0.05); padNodes.push(master);
+}
+function stopPad(){padNodes.forEach(n=>{try{n.stop&&n.stop()}catch(e){}});padNodes=[];if(audioCtx){audioCtx.close();audioCtx=null;}}
+async function playDemo(){stopDemo();demoStop=false;if(!padOn){padOn=true;document.getElementById("padBtn").textContent="Music: on";startPad();}showPage("walk");for(const k of order){if(demoStop)break;await showStep(k,true);}}
+function stopDemo(){demoStop=true;if(window.speechSynthesis)window.speechSynthesis.cancel();}
+function v(id){return document.getElementById(id).value.trim()}
+function renderBuild(){
+  const name=v("fName"), date=v("fDate"), loc=v("fLoc"), clr=v("fClear"), certs=v("fCerts"), bg=v("fBg"), titles=v("fTitles"), goal=v("fGoal"), apps=v("fApps");
+  document.getElementById("pGoal").textContent=goal+" · start "+date;
+  document.getElementById("pLaneA").textContent=clr+" roles for: "+titles.split(",")[0];
+  document.getElementById("pLaneB").textContent="Direct employer pages near "+loc;
+  document.getElementById("pCard").textContent=`SAMPLE CARD\n### 1. ${titles.split(",")[0].trim()} — Example Co — your commute\nClearance: ${clr}\nCerts: ${certs}\nWhy you: ${bg.slice(0,140)}\nVerdict: APPLY NOW after human triage\nFit: score after Strategist`;
+  document.getElementById("outPrompts").textContent=`PROMPT 1 — Cleared Scout\nYou hunt cleared roles for ${name}. Separate/start ${date}. ${clr}. ${certs}. ${bg}\nLocation: ${loc}\nTitles: ${titles}\nSearch clearance boards and contractor pages only.\nCard format only. Never apply without approval.\n\nPROMPT 2 — Hidden Gem Scout\nSame profile. Official career pages only in this commute: ${loc}\nTitles: ${titles}\nSplit A apply / B stretch / C monitor.\nNever apply without approval.\n\nPROMPT 3 — Application Strategist\nOne job description + master resume at a time.\nFirst line VERDICT: APPLY NOW / IMPROVE / SKIP.\nDo not exaggerate. Goal: ${goal}. Weekly pace: ${apps}.`;
+}
+function copyText(id){navigator.clipboard.writeText(document.getElementById(id).textContent);alert("Copied.");}
+drawFlow(); showStep("goal",false); renderBuild();
+["fName","fDate","fLoc","fClear","fCerts","fBg","fTitles","fGoal","fApps"].forEach(id=>document.getElementById(id).addEventListener("input",renderBuild));
+</script>
 </body>
 </html>
